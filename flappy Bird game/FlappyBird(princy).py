@@ -14,7 +14,6 @@ GAME_SOUNDS = {}
 PLAYER = 'gallery/sprites/bird2.png'
 BACKGROUND = 'gallery/sprites/background.png'
 PIPE = 'gallery/sprites/pipe4.png'
-HIGH = 'gallery/sprites/highscore.png'
 highScore = 0
 
 def welcomeScreen():
