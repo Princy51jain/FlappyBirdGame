@@ -1,7 +1,8 @@
 import random # For generating random numbers
 import sys # We will use sys.exit to exit the program
 import pygame
-from pygame.locals import * # Basic pygame imports
+from pygame.locals import *
+from zmq import NULL # Basic pygame imports
 
 # Global Variables for the game
 FPS = 32
@@ -14,7 +15,8 @@ GAME_SOUNDS = {}
 PLAYER = 'gallery/sprites/bird2.png'
 BACKGROUND = 'gallery/sprites/background3.png'
 PIPE = 'gallery/sprites/pipe4.png'
-HIGH_SCORE_FILE = 'highscore.txt'
+HIGH = 'gallery/sprites/highscore.png'
+highScore = 0
 
 def welcomeScreen():
     """
@@ -27,13 +29,13 @@ def welcomeScreen():
     messagey = int(SCREENHEIGHT*0.08)
     basex = 0
 
-    # Load high score from file
-    try:
-        with open(HIGH_SCORE_FILE, 'r') as f:
-            highScore = int(f.read())
-    except:
-        highScore = 0
-
+    # Load high score
+    global high
+    high = open('high_score.txt', 'r+')
+    global highScore
+    highScore = high.read()
+    highScore = highScore.replace('\x00', '')
+    highScore = int(highScore)
 
     while True:
         for event in pygame.event.get():
@@ -105,7 +107,13 @@ def mainGame():
         playerMidPos = playerx + GAME_SPRITES['player'].get_width()/2
         for pipe in upperPipes:
             pipeMidPos = pipe['x'] + GAME_SPRITES['pipe'][0].get_width()/2
-            if pipeMidPos<= playerMidPos < pipeMidPos + 10:
+            if pipeMidPos<= playerMidPos < pipeMidPos + 10:  
+                global highScore              
+                if highScore == score:
+                    highScore += 1
+                    high.truncate(0)
+                    high.write(f"{highScore}")
+                    GAME_SOUNDS['success'].play()
                 score +=1
                 print(f"Your score is {score}") 
                 GAME_SOUNDS['point'].play()
@@ -144,6 +152,7 @@ def mainGame():
         SCREEN.blit(GAME_SPRITES['base'], (basex, GROUNDY))
         SCREEN.blit(GAME_SPRITES['player'], (playerx, playery))
         myDigits = [int(x) for x in list(str(score))]
+        myhs = [int(x) for x in list(str(highScore))]
         width = 0
         for digit in myDigits:
             width += GAME_SPRITES['numbers'][digit].get_width()
@@ -151,6 +160,12 @@ def mainGame():
 
         for digit in myDigits:
             SCREEN.blit(GAME_SPRITES['numbers'][digit], (Xoffset, SCREENHEIGHT*0.12))
+            Xoffset += GAME_SPRITES['numbers'][digit].get_width()
+
+        Xoffset = 143
+
+        for digit in myhs:
+            SCREEN.blit(GAME_SPRITES['numbers'][digit], (Xoffset, 100))
             Xoffset += GAME_SPRITES['numbers'][digit].get_width()
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -236,8 +251,10 @@ if __name__ == "__main__":
     GAME_SOUNDS['point'] = pygame.mixer.Sound('gallery/audio/point.wav')  
     GAME_SOUNDS['swoosh'] = pygame.mixer.Sound('gallery/audio/swoosh.wav')
     GAME_SOUNDS['wing'] = pygame.mixer.Sound('gallery/audio/wing.wav')
+    GAME_SOUNDS['success'] = pygame.mixer.Sound('gallery/audio/sc2.wav')
 
     GAME_SPRITES['background'] = pygame.image.load(BACKGROUND).convert()
+    GAME_SPRITES['highScore'] = pygame.image.load(HIGH).convert()
     GAME_SPRITES['player'] = pygame.image.load(PLAYER).convert_alpha()
 
     while True:
